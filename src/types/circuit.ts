@@ -74,6 +74,18 @@ export interface DangerWarning {
   precaution: string;
 }
 
+// Danger simulation (AI-generated risk visualization)
+export interface DangerSimulation {
+  warningType: string;        // 위험 유형 (dangerWarnings의 type과 매칭)
+  severity: string;           // 심각도
+  description: string;        // 위험 상황 설명
+  imagePrompt: string;        // AI 이미지 생성에 사용된 프롬프트
+  imageBase64?: string;       // 생성된 이미지 (base64)
+  imageUrl?: string;          // 이미지 URL (대체)
+  consequence: string;        // 이 위험이 발생하면 어떤 결과가 생기는지
+  preventionTip: string;      // 예방 방법
+}
+
 // Optimization suggestion
 export interface Optimization {
   area: string;
@@ -119,6 +131,7 @@ export interface CircuitAnalysis {
   optimizations: Optimization[];
   reconstructedCircuit?: ReconstructedCircuit;
   userAnswer?: string; // 사용자 궁금한 점에 대한 AI 답변
+  dangerSimulations?: DangerSimulation[];  // 위험 시뮬레이션 이미지들
 }
 
 // Editor-specific types

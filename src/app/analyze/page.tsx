@@ -15,7 +15,7 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { Upload, Loader2, AlertTriangle, XCircle, Info, Edit3 } from "lucide-react";
-import type { CircuitAnalysis } from "@/types/circuit";
+import type { CircuitAnalysis, DangerSimulation } from "@/types/circuit";
 import { useRouter } from "next/navigation";
 import ReconstructedBatteryNode from "@/components/analyze/nodes/ReconstructedBatteryNode";
 import ReconstructedResistorNode from "@/components/analyze/nodes/ReconstructedResistorNode";
@@ -206,6 +206,8 @@ export default function AnalyzePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showFullSummary, setShowFullSummary] = useState(false);
+  const [dangerSimulations, setDangerSimulations] = useState<DangerSimulation[]>([]);
+  const [dangerSimLoading, setDangerSimLoading] = useState(false);
   
   const SUMMARY_COLLAPSE_THRESHOLD = 300;
 
@@ -269,6 +271,7 @@ export default function AnalyzePage() {
       optimizations: Array.isArray(data.optimizations) ? data.optimizations : [],
       reconstructedCircuit: data.reconstructedCircuit || undefined,
       userAnswer: typeof data.userAnswer === 'string' ? data.userAnswer : undefined,
+      dangerSimulations: Array.isArray(data.dangerSimulations) ? data.dangerSimulations : [],
     };
   };
 
@@ -300,10 +303,37 @@ export default function AnalyzePage() {
       // 방어 로직: data가 올바른 구조인지 검증
       const validatedAnalysis = validateAnalysis(data);
       setAnalysis(validatedAnalysis);
+
+      // 위험 경고가 있으면 시뮬레이션 자동 시작
+      if (validatedAnalysis.dangerWarnings && validatedAnalysis.dangerWarnings.length > 0) {
+        fetchDangerSimulations(validatedAnalysis);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDangerSimulations = async (analysisData: CircuitAnalysis) => {
+    setDangerSimLoading(true);
+    try {
+      const response = await fetch("/api/danger-simulation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dangerWarnings: analysisData.dangerWarnings,
+          circuitSummary: analysisData.summary,
+        }),
+      });
+      const data = await response.json();
+      if (data.simulations) {
+        setDangerSimulations(data.simulations);
+      }
+    } catch (err) {
+      console.error("Danger simulation fetch error:", err);
+    } finally {
+      setDangerSimLoading(false);
     }
   };
 
@@ -664,6 +694,102 @@ export default function AnalyzePage() {
             transition={{ delay: 0.3 }}
           >
             <ReconstructedCircuitSection circuit={analysis.reconstructedCircuit} />
+          </motion.div>
+        )}
+
+        {/* Danger Simulation Section (Full Width Below Reconstructed Circuit) */}
+        {(dangerSimulations.length > 0 || dangerSimLoading) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-8"
+          >
+            <div className="rounded-2xl border border-red-500/30 bg-gray-900 p-6">
+              <h2 className="mb-6 flex items-center gap-2 text-2xl font-bold text-red-400">
+                <span className="text-2xl">🔥</span> 위험 구역: 오회로 시뮬레이션
+              </h2>
+              <p className="mb-6 text-sm text-gray-400">
+                AI가 이 회로의 위험 요소를 시각적으로 시뮬레이션했습니다. 아래 이미지는 교육 목적으로 생성되었습니다.
+              </p>
+
+              {dangerSimLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <Loader2 className="mx-auto h-10 w-10 animate-spin text-red-400" />
+                    <p className="mt-4 text-sm text-gray-400">위험 시뮬레이션 생성 중...</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {dangerSimulations.map((sim, idx) => (
+                    <div
+                      key={idx}
+                      className="overflow-hidden rounded-xl border border-red-500/20 bg-gray-800/50"
+                    >
+                      <div className="grid gap-0 lg:grid-cols-[1fr_1fr]">
+                        {/* 이미지 영역 */}
+                        <div className="relative aspect-video bg-gray-900 flex items-center justify-center">
+                          {sim.imageBase64 ? (
+                            <img
+                              src={`data:image/png;base64,${sim.imageBase64}`}
+                              alt={`위험 시뮬레이션: ${sim.warningType}`}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="text-center p-8">
+                              <AlertTriangle className="mx-auto h-16 w-16 text-red-500/50" />
+                              <p className="mt-4 text-sm text-gray-500">
+                                이미지를 생성할 수 없습니다
+                              </p>
+                            </div>
+                          )}
+                          {/* Severity badge */}
+                          <div className={`absolute top-3 left-3 rounded-full px-3 py-1 text-xs font-bold ${
+                            sim.severity === 'critical' ? 'bg-red-600 text-white' :
+                            sim.severity === 'high' ? 'bg-orange-500 text-white' :
+                            sim.severity === 'medium' ? 'bg-yellow-500 text-black' :
+                            'bg-blue-500 text-white'
+                          }`}>
+                            {sim.severity?.toUpperCase()}
+                          </div>
+                        </div>
+
+                        {/* 텍스트 설명 영역 */}
+                        <div className="flex flex-col justify-between p-5">
+                          <div>
+                            <h3 className="mb-2 text-lg font-bold text-red-300">
+                              ⚠️ {sim.warningType}
+                            </h3>
+                            <p className="mb-4 text-sm leading-relaxed text-gray-300">
+                              {sim.description}
+                            </p>
+
+                            <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 p-3">
+                              <h4 className="mb-1 text-xs font-bold text-red-400">
+                                💀 방치 시 결과
+                              </h4>
+                              <p className="text-xs leading-relaxed text-gray-300">
+                                {sim.consequence}
+                              </p>
+                            </div>
+
+                            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3">
+                              <h4 className="mb-1 text-xs font-bold text-emerald-400">
+                                🛡️ 예방 방법
+                              </h4>
+                              <p className="text-xs leading-relaxed text-gray-300">
+                                {sim.preventionTip}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
       </div>
