@@ -11,6 +11,7 @@ export default function Header() {
   const navLinks = [
     { href: "/", label: "홈" },
     { href: "/analyze", label: "회로 분석" },
+    { href: "/editor", label: "회로 에디터" },
     { href: "/simulate", label: "시뮬레이션" },
   ];
 

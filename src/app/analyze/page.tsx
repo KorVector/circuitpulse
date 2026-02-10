@@ -2,10 +2,12 @@
 
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Upload, Loader2, AlertTriangle, CheckCircle, XCircle, Info } from "lucide-react";
+import { Upload, Loader2, AlertTriangle, CheckCircle, XCircle, Info, Edit3 } from "lucide-react";
 import type { CircuitAnalysis } from "@/types/circuit";
+import { useRouter } from "next/navigation";
 
 export default function AnalyzePage() {
+  const router = useRouter();
   const [image, setImage] = useState<string | null>(null);
   const [availableParts, setAvailableParts] = useState("");
   const [analysis, setAnalysis] = useState<CircuitAnalysis | null>(null);
@@ -85,6 +87,16 @@ export default function AnalyzePage() {
       default:
         return "text-blue-400 border-blue-500/50 bg-blue-500/10";
     }
+  };
+
+  const openInEditor = () => {
+    if (!analysis) return;
+    
+    // Save analysis data to localStorage
+    localStorage.setItem("editorAnalysisData", JSON.stringify(analysis));
+    
+    // Navigate to editor
+    router.push("/editor");
   };
 
   return (
@@ -209,6 +221,15 @@ export default function AnalyzePage() {
 
             {analysis && (
               <div className="scrollbar-thin max-h-[600px] space-y-4 overflow-y-auto">
+                {/* Open in Editor Button */}
+                <button
+                  onClick={openInEditor}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg border border-blue-500 bg-blue-500/10 px-4 py-3 text-sm font-semibold text-blue-400 transition-colors hover:bg-blue-500/20"
+                >
+                  <Edit3 className="h-4 w-4" />
+                  에디터에서 열기
+                </button>
+
                 {/* Summary */}
                 <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
                   <h3 className="mb-2 font-semibold text-blue-400">종합 분석</h3>
