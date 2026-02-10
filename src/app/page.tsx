@@ -87,7 +87,7 @@ export default function Home() {
           </div>
           
           <h1 className="mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-5xl font-bold text-transparent sm:text-6xl">
-            CircuitPulse
+            CircuitGuide
           </h1>
           
           <p className="mb-8 text-lg text-gray-300 sm:text-xl">
@@ -136,7 +136,7 @@ export default function Home() {
               핵심 기능
             </h2>
             <p className="text-lg text-gray-400">
-              CircuitPulse가 제공하는 강력한 기능들을 만나보세요
+              CircuitGuide가 제공하는 강력한 기능들을 만나보세요
             </p>
           </motion.div>
 
@@ -179,7 +179,7 @@ export default function Home() {
             지금 바로 시작하세요
           </h2>
           <p className="mb-8 text-lg text-gray-400">
-            회로도를 업로드하거나 직접 에디터로 회로를 그려서 CircuitPulse를 경험해보세요
+            회로도를 업로드하거나 직접 에디터로 회로를 그려서 CircuitGuide를 경험해보세요
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
