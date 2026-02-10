@@ -81,6 +81,31 @@ export interface Optimization {
   benefit: string;
 }
 
+// Reconstructed circuit node (from AI)
+export interface ReconstructedNode {
+  id: string;
+  type: string;
+  label: string;
+  value: string;
+  position: { x: number; y: number };
+}
+
+// Reconstructed circuit edge (from AI)
+export interface ReconstructedEdge {
+  id: string;
+  source: string;
+  target: string;
+  label?: string;
+}
+
+// Reconstructed circuit from AI
+export interface ReconstructedCircuit {
+  description: string;
+  nodes: ReconstructedNode[];
+  edges: ReconstructedEdge[];
+  improvements: string[];
+}
+
 // Complete circuit analysis response
 export interface CircuitAnalysis {
   summary: string;
@@ -92,6 +117,7 @@ export interface CircuitAnalysis {
   realWorldFactors: RealWorldFactor[];
   dangerWarnings: DangerWarning[];
   optimizations: Optimization[];
+  reconstructedCircuit?: ReconstructedCircuit;
 }
 
 // Editor-specific types
