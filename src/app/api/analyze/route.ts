@@ -1,9 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "",
-});
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,12 +11,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
-        { error: "OpenAI API 키가 설정되지 않았습니다" },
+        { error: "Gemini API 키가 설정되지 않았습니다. .env.local 파일을 확인하세요." },
         { status: 500 }
       );
     }
+
+    const matches = image.match(/^data:(.+);base64,(.+)$/);
+    const mimeType = matches ? matches[1] : "image/png";
+    const base64Data = matches ? matches[2] : image;
 
     const prompt = `당신은 전기회로 전문가입니다. 제공된 회로도 이미지를 분석하고 다음 정보를 JSON 형식으로 제공하세요:
 
@@ -35,7 +34,7 @@ ${availableParts ? `사용자가 보유한 부품: ${availableParts}\n` : ""}
       "name": "부품명",
       "type": "부품 유형 (저항, LED, 전지 등)",
       "value": "부품 값 (예: 220Ω, 9V)",
-      "quantity": 수량
+      "quantity": 1
     }
   ],
   "errors": [
@@ -43,7 +42,7 @@ ${availableParts ? `사용자가 보유한 부품: ${availableParts}\n` : ""}
       "type": "오류 유형",
       "description": "오류 설명",
       "severity": "warning | error | critical",
-      "location": "오류 위치 (선택사항)"
+      "location": "오류 위치"
     }
   ],
   "calculations": [
@@ -51,7 +50,7 @@ ${availableParts ? `사용자가 보유한 부품: ${availableParts}\n` : ""}
       "parameter": "계산 항목 (예: 총 전류)",
       "value": "계산 값",
       "unit": "단위",
-      "formula": "사용된 공식 (선택사항)"
+      "formula": "사용된 공식"
     }
   ],
   "alternatives": [
@@ -59,7 +58,7 @@ ${availableParts ? `사용자가 보유한 부품: ${availableParts}\n` : ""}
       "original": "원래 부품",
       "alternatives": ["대체 가능한 부품 목록"],
       "reason": "대체 가능한 이유",
-      "availability": "수급 가능성 (선택사항)"
+      "availability": "수급 가능성"
     }
   ],
   "causalExplanations": [
@@ -74,7 +73,7 @@ ${availableParts ? `사용자가 보유한 부품: ${availableParts}\n` : ""}
     {
       "factor": "고려해야 할 현실 요인",
       "impact": "영향",
-      "recommendation": "권장사항 (선택사항)"
+      "recommendation": "권장사항"
     }
   ],
   "dangerWarnings": [
@@ -96,32 +95,82 @@ ${availableParts ? `사용자가 보유한 부품: ${availableParts}\n` : ""}
 
 한국어로 응답하세요. 회로의 안전성, 효율성, 실용성을 중점적으로 분석하세요.`;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: prompt },
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
             {
-              type: "image_url",
-              image_url: {
-                url: image,
-              },
+              parts: [
+                { text: prompt },
+                {
+                  inlineData: {
+                    mimeType: mimeType,
+                    data: base64Data,
+                  },
+                },
+              ],
             },
           ],
-        },
-      ],
-      response_format: { type: "json_object" },
-      max_tokens: 4096,
-    });
+          generationConfig: {
+            responseMimeType: "application/json",
+            maxOutputTokens: 8192,
+          },
+        }),
+      }
+    );
 
-    const content = response.choices[0]?.message?.content;
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("Gemini API 오류:", data);
+      throw new Error(data.error?.message || "Gemini API 호출 실패");
+    }
+
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!content) {
       throw new Error("AI 응답이 비어있습니다");
     }
 
-    const analysisResult = JSON.parse(content);
+    // JSON이 잘릴 수 있으므로 안전하게 파싱
+    let analysisResult;
+    try {
+      analysisResult = JSON.parse(content);
+    } catch {
+      // JSON이 잘린 경우 - 닫는 괄호를 추가하여 복구 시도
+      let fixed = content.trim();
+      // 열린 배열/객체 수 계산 후 닫기
+      const openBraces = (fixed.match(/{/g) || []).length;
+      const closeBraces = (fixed.match(/}/g) || []).length;
+      const openBrackets = (fixed.match(/\[/g) || []).length;
+      const closeBrackets = (fixed.match(/\]/g) || []).length;
+
+      // 마지막 불완전한 문자열 정리
+      fixed = fixed.replace(/,\s*$/, "");
+      fixed = fixed.replace(/"[^"]*$/, '""');
+
+      for (let i = 0; i < openBrackets - closeBrackets; i++) fixed += "]";
+      for (let i = 0; i < openBraces - closeBraces; i++) fixed += "}";
+
+      try {
+        analysisResult = JSON.parse(fixed);
+      } catch {
+        // 복구 실패 시 기본 응답
+        analysisResult = {
+          summary: content.substring(0, 500),
+          components: [],
+          errors: [],
+          calculations: [],
+          alternatives: [],
+          causalExplanations: [],
+          realWorldFactors: [],
+          dangerWarnings: [],
+          optimizations: [],
+        };
+      }
+    }
 
     return NextResponse.json(analysisResult);
   } catch (error) {
