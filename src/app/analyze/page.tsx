@@ -205,6 +205,7 @@ export default function AnalyzePage() {
   const [analysis, setAnalysis] = useState<CircuitAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showFullSummary, setShowFullSummary] = useState(false);
 
   const handleImageUpload = useCallback((file: File) => {
     const reader = new FileReader();
@@ -237,6 +238,32 @@ export default function AnalyzePage() {
     [handleImageUpload]
   );
 
+  const validateAnalysis = (data: any): CircuitAnalysis => {
+    // data.summary가 JSON 텍스트로 보이면 파싱 시도
+    if (typeof data.summary === 'string' && data.summary.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(data.summary);
+        if (parsed.summary) {
+          return validateAnalysis(parsed);
+        }
+      } catch {}
+    }
+    
+    return {
+      summary: typeof data.summary === 'string' ? data.summary : '분석 결과를 불러오는 중 오류가 발생했습니다.',
+      components: Array.isArray(data.components) ? data.components : [],
+      errors: Array.isArray(data.errors) ? data.errors : [],
+      calculations: Array.isArray(data.calculations) ? data.calculations : [],
+      alternatives: Array.isArray(data.alternatives) ? data.alternatives : [],
+      causalExplanations: Array.isArray(data.causalExplanations) ? data.causalExplanations : [],
+      realWorldFactors: Array.isArray(data.realWorldFactors) ? data.realWorldFactors : [],
+      dangerWarnings: Array.isArray(data.dangerWarnings) ? data.dangerWarnings : [],
+      optimizations: Array.isArray(data.optimizations) ? data.optimizations : [],
+      reconstructedCircuit: data.reconstructedCircuit || undefined,
+      userAnswer: typeof data.userAnswer === 'string' ? data.userAnswer : undefined,
+    };
+  };
+
   const analyzeCircuit = async () => {
     if (!image) return;
 
@@ -261,7 +288,10 @@ export default function AnalyzePage() {
       }
 
       const data = await response.json();
-      setAnalysis(data);
+      
+      // 방어 로직: data가 올바른 구조인지 검증
+      const validatedAnalysis = validateAnalysis(data);
+      setAnalysis(validatedAnalysis);
     } catch (err) {
       setError(err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다");
     } finally {
@@ -423,7 +453,21 @@ export default function AnalyzePage() {
                     <h3 className="mb-3 flex items-center gap-2 text-base font-bold text-blue-400">
                       <span className="text-lg">📋</span> 종합 분석
                     </h3>
-                    <p className="text-sm leading-relaxed text-gray-300">{analysis.summary}</p>
+                    {analysis.summary.length > 300 ? (
+                      <>
+                        <p className="text-sm leading-relaxed text-gray-300">
+                          {showFullSummary ? analysis.summary : analysis.summary.substring(0, 300) + "..."}
+                        </p>
+                        <button
+                          onClick={() => setShowFullSummary(!showFullSummary)}
+                          className="mt-2 text-xs text-blue-400 hover:text-blue-300"
+                        >
+                          {showFullSummary ? "접기" : "더 보기"}
+                        </button>
+                      </>
+                    ) : (
+                      <p className="text-sm leading-relaxed text-gray-300">{analysis.summary}</p>
+                    )}
                   </div>
 
                   {/* Danger Warnings */}
