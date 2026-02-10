@@ -13,7 +13,8 @@ function SwitchNode({ data, selected }: NodeProps<EditorNodeData>) {
         selected ? "border-blue-500 shadow-blue-500/50" : "border-gray-600"
       }`}
     >
-      <Handle type="target" position={Position.Left} className="!bg-blue-400" />
+      <Handle type="target" position={Position.Left} id="left-target" className="!bg-blue-400" />
+      <Handle type="source" position={Position.Left} id="left-source" className="!bg-blue-400" />
       
       <div className="flex flex-col items-center gap-1">
         <div className="text-2xl">{isOn ? "🔛" : "⭕"}</div>
@@ -23,7 +24,8 @@ function SwitchNode({ data, selected }: NodeProps<EditorNodeData>) {
         </div>
       </div>
       
-      <Handle type="source" position={Position.Right} className="!bg-blue-400" />
+      <Handle type="target" position={Position.Right} id="right-target" className="!bg-blue-400" />
+      <Handle type="source" position={Position.Right} id="right-source" className="!bg-blue-400" />
     </div>
   );
 }
