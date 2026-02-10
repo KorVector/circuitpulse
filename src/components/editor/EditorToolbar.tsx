@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Brain, Play, RotateCcw, RotateCw, Trash2 } from "lucide-react";
+import { FileText, Brain, Play, Square, RotateCcw, RotateCw, Trash2 } from "lucide-react";
 
 interface EditorToolbarProps {
   onNew: () => void;
@@ -11,6 +11,7 @@ interface EditorToolbarProps {
   canUndo: boolean;
   canRedo: boolean;
   onClear: () => void;
+  isSimulating?: boolean;
 }
 
 export default function EditorToolbar({
@@ -22,6 +23,7 @@ export default function EditorToolbar({
   canUndo,
   canRedo,
   onClear,
+  isSimulating = false,
 }: EditorToolbarProps) {
   return (
     <div className="flex items-center gap-2 border-b border-gray-800 bg-gray-900 px-4 py-3">
@@ -75,10 +77,23 @@ export default function EditorToolbar({
       
       <button
         onClick={onSimulate}
-        className="flex items-center gap-2 rounded-lg border border-green-500 bg-green-500/10 px-4 py-2 text-sm font-semibold text-green-400 transition-colors hover:bg-green-500/20"
+        className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+          isSimulating
+            ? "border border-red-500 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+            : "border border-green-500 bg-green-500/10 text-green-400 hover:bg-green-500/20"
+        }`}
       >
-        <Play className="h-4 w-4" />
-        시뮬레이션
+        {isSimulating ? (
+          <>
+            <Square className="h-4 w-4" />
+            시뮬레이션 중지
+          </>
+        ) : (
+          <>
+            <Play className="h-4 w-4" />
+            시뮬레이션
+          </>
+        )}
       </button>
     </div>
   );

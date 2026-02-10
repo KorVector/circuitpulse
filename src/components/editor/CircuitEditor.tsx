@@ -20,6 +20,7 @@ import "reactflow/dist/style.css";
 import ComponentPalette from "./ComponentPalette";
 import PropertiesPanel from "./PropertiesPanel";
 import EditorToolbar from "./EditorToolbar";
+import SimulationPanel from "./SimulationPanel";
 import BatteryNode from "./nodes/BatteryNode";
 import ResistorNode from "./nodes/ResistorNode";
 import LEDNode from "./nodes/LEDNode";
@@ -32,6 +33,7 @@ import PowerNode from "./nodes/PowerNode";
 import type { EditorNodeData, PaletteComponent } from "@/types/circuit";
 import type { CircuitAnalysis } from "@/types/circuit";
 import { Loader2, X, CheckCircle } from "lucide-react";
+import { simulateCircuit, SimulationResult } from "@/lib/simulation";
 
 const nodeTypes: NodeTypes = {
   battery: BatteryNode,
@@ -64,6 +66,9 @@ function CircuitEditorContent() {
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
+  
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [simulationResult, setSimulationResult] = useState<SimulationResult | null>(null);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -269,8 +274,58 @@ function CircuitEditorContent() {
           prev ? { ...prev, data: { ...prev.data, isOn: !prev.data.isOn } } : null
         );
       }
+      
+      // If simulating, recalculate after a short delay to allow React state to update
+      // This ensures the new switch state is reflected in the nodes before recalculation
+      if (isSimulating) {
+        setTimeout(() => {
+          // Get updated nodes
+          setNodes((currentNodes) => {
+            const result = simulateCircuit(currentNodes, edges);
+            setSimulationResult(result);
+            
+            // Update edges
+            setEdges((eds) =>
+              eds.map((edge) => {
+                const pathState = result.pathStates.find((p) => p.edgeId === edge.id);
+                if (pathState && pathState.active) {
+                  return {
+                    ...edge,
+                    animated: true,
+                    style: { stroke: "#4ade80", strokeWidth: 3 },
+                    label: `${pathState.current.toFixed(1)}mA`,
+                    labelStyle: { fill: "#4ade80", fontSize: 10, fontWeight: 'bold' },
+                  };
+                } else {
+                  return {
+                    ...edge,
+                    animated: false,
+                    style: { stroke: "#6b7280", strokeWidth: 1 },
+                    label: "",
+                  };
+                }
+              })
+            );
+            
+            // Update nodes with simulation status
+            return currentNodes.map((node) => {
+              const compResult = result.componentResults.find((c) => c.nodeId === node.id);
+              const isWarned = result.warnings.some((w) => w.affectedNodeIds.includes(node.id));
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  simulationStatus: isWarned ? 'warning' : compResult?.status || 'normal',
+                  simulationCurrent: compResult?.current,
+                  simulationVoltage: compResult?.voltage,
+                },
+              };
+            });
+          });
+        }, 50);
+      }
     },
-    [setNodes, selectedNode]
+    [setNodes, selectedNode, isSimulating, edges, setEdges]
   );
 
   const onNew = useCallback(() => {
@@ -356,8 +411,87 @@ function CircuitEditorContent() {
   }, [nodes, edges]);
 
   const onSimulate = useCallback(() => {
-    alert("시뮬레이션 기능은 곧 추가될 예정입니다!");
-  }, []);
+    if (isSimulating) {
+      // Stop simulation
+      setIsSimulating(false);
+      setSimulationResult(null);
+      
+      // Reset edge styles to default
+      setEdges((eds) =>
+        eds.map((edge) => ({
+          ...edge,
+          animated: true,
+          style: { stroke: "#60a5fa" }, // Default blue color matching initial edges
+          label: "",
+        }))
+      );
+      
+      // Reset node simulation status
+      setNodes((nds) =>
+        nds.map((node) => ({
+          ...node,
+          data: {
+            ...node.data,
+            simulationStatus: undefined,
+            simulationCurrent: undefined,
+            simulationVoltage: undefined,
+          },
+        }))
+      );
+      
+      return;
+    }
+
+    if (nodes.length === 0) {
+      alert("시뮬레이션할 회로가 없습니다. 부품을 추가해주세요.");
+      return;
+    }
+
+    // Start simulation
+    const result = simulateCircuit(nodes, edges);
+    setSimulationResult(result);
+    setIsSimulating(true);
+
+    // Update edges with animation and current labels
+    setEdges((eds) =>
+      eds.map((edge) => {
+        const pathState = result.pathStates.find((p) => p.edgeId === edge.id);
+        if (pathState && pathState.active) {
+          return {
+            ...edge,
+            animated: true,
+            style: { stroke: "#4ade80", strokeWidth: 3 },
+            label: `${pathState.current.toFixed(1)}mA`,
+            labelStyle: { fill: "#4ade80", fontSize: 10, fontWeight: 'bold' },
+          };
+        } else {
+          return {
+            ...edge,
+            animated: false,
+            style: { stroke: "#6b7280", strokeWidth: 1 },
+            label: "",
+          };
+        }
+      })
+    );
+
+    // Update nodes with simulation status
+    setNodes((nds) =>
+      nds.map((node) => {
+        const compResult = result.componentResults.find((c) => c.nodeId === node.id);
+        const isWarned = result.warnings.some((w) => w.affectedNodeIds.includes(node.id));
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            simulationStatus: isWarned ? 'warning' : compResult?.status || 'normal',
+            simulationCurrent: compResult?.current,
+            simulationVoltage: compResult?.voltage,
+          },
+        };
+      })
+    );
+  }, [isSimulating, nodes, edges, setEdges, setNodes]);
 
   // Save to localStorage when nodes or edges change
   useEffect(() => {
@@ -377,6 +511,7 @@ function CircuitEditorContent() {
         canUndo={historyIndex > 0}
         canRedo={historyIndex < history.length - 1}
         onClear={onClear}
+        isSimulating={isSimulating}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -427,6 +562,9 @@ function CircuitEditorContent() {
           onToggleSwitch={onToggleSwitch}
         />
       </div>
+
+      {/* Simulation Panel */}
+      <SimulationPanel result={simulationResult} isSimulating={isSimulating} />
 
       {/* Analysis Modal */}
       {showAnalysisModal && (

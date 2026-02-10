@@ -129,6 +129,10 @@ export interface EditorNodeData {
   unit?: string;
   icon?: string;
   isOn?: boolean; // For switches
+  // Simulation-related fields
+  simulationStatus?: 'normal' | 'on' | 'warning' | 'danger' | 'off';
+  simulationCurrent?: number;
+  simulationVoltage?: number;
 }
 
 export interface PaletteComponent {
