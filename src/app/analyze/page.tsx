@@ -206,6 +206,8 @@ export default function AnalyzePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showFullSummary, setShowFullSummary] = useState(false);
+  
+  const SUMMARY_COLLAPSE_THRESHOLD = 300;
 
   const handleImageUpload = useCallback((file: File) => {
     const reader = new FileReader();
@@ -238,13 +240,16 @@ export default function AnalyzePage() {
     [handleImageUpload]
   );
 
-  const validateAnalysis = (data: any): CircuitAnalysis => {
+  const validateAnalysis = (data: any, depth = 0): CircuitAnalysis => {
+    // 무한 재귀 방지: 최대 깊이 3으로 제한
+    const MAX_DEPTH = 3;
+    
     // data.summary가 JSON 텍스트로 보이면 파싱 시도
-    if (typeof data.summary === 'string' && data.summary.trim().startsWith('{')) {
+    if (depth < MAX_DEPTH && typeof data.summary === 'string' && data.summary.trim().startsWith('{')) {
       try {
         const parsed = JSON.parse(data.summary);
         if (parsed.summary) {
-          return validateAnalysis(parsed);
+          return validateAnalysis(parsed, depth + 1);
         }
       } catch {}
     }
@@ -453,10 +458,10 @@ export default function AnalyzePage() {
                     <h3 className="mb-3 flex items-center gap-2 text-base font-bold text-blue-400">
                       <span className="text-lg">📋</span> 종합 분석
                     </h3>
-                    {analysis.summary.length > 300 ? (
+                    {analysis.summary.length > SUMMARY_COLLAPSE_THRESHOLD ? (
                       <>
                         <p className="text-sm leading-relaxed text-gray-300">
-                          {showFullSummary ? analysis.summary : analysis.summary.substring(0, 300) + "..."}
+                          {showFullSummary ? analysis.summary : analysis.summary.substring(0, SUMMARY_COLLAPSE_THRESHOLD) + "..."}
                         </p>
                         <button
                           onClick={() => setShowFullSummary(!showFullSummary)}

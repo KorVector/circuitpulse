@@ -213,7 +213,8 @@ ${userQuestion ? `사용자가 궁금한 점: ${userQuestion}\n` : ""}
         
         try {
           // content가 JSON 문자열처럼 보이면 summary 필드 추출 시도
-          const summaryMatch = parsedContent.match(/"summary"\s*:\s*"([^"]+)"/);
+          // 이스케이프된 문자 처리를 위해 개선된 regex 사용
+          const summaryMatch = parsedContent.match(/"summary"\s*:\s*"((?:[^"\\]|\\.)*)"/);
           if (summaryMatch) {
             extractedSummary = summaryMatch[1];
           }
