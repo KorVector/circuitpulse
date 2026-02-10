@@ -125,7 +125,9 @@ function calculatePathResistance(path: string[], nodes: Node<EditorNodeData>[]):
     if (node.data.type === 'resistor') {
       totalResistance += parseValue(node.data.value, 220); // Default 220Ω
     } else if (node.data.type === 'led') {
-      totalResistance += 10; // LED has small internal resistance (~10Ω)
+      // LEDs have small internal resistance, typically 10-20Ω depending on type
+      // Using 10Ω as a conservative estimate for standard 5mm LEDs
+      totalResistance += 10;
     }
   }
   
@@ -320,7 +322,9 @@ export function simulateCircuit(
         const r = parseValue(node.data.value, 220);
         componentVoltage = (componentCurrent / 1000) * r; // V = IR
       } else if (node.data.type === 'led') {
-        componentVoltage = 2; // LED forward voltage ~2V
+        // LED forward voltage: typically 1.8-2.2V for red, 3.0-3.5V for blue/white
+        // Using 2V as a typical value for standard red LEDs
+        componentVoltage = 2;
         if (hasWarning) {
           status = 'warning';
         } else {

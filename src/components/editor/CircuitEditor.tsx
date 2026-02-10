@@ -275,7 +275,8 @@ function CircuitEditorContent() {
         );
       }
       
-      // If simulating, recalculate after a short delay for state update
+      // If simulating, recalculate after a short delay to allow React state to update
+      // This ensures the new switch state is reflected in the nodes before recalculation
       if (isSimulating) {
         setTimeout(() => {
           // Get updated nodes
@@ -415,12 +416,12 @@ function CircuitEditorContent() {
       setIsSimulating(false);
       setSimulationResult(null);
       
-      // Reset edge styles
+      // Reset edge styles to default
       setEdges((eds) =>
         eds.map((edge) => ({
           ...edge,
           animated: true,
-          style: { stroke: "#60a5fa" },
+          style: { stroke: "#60a5fa" }, // Default blue color matching initial edges
           label: "",
         }))
       );
