@@ -117,7 +117,7 @@ ${availableParts ? `사용자가 보유한 부품: ${availableParts}\n` : ""}
 }
 
 **중요**: 
-- 사용자의 어거지(미완성) 회로도를 보고, 실제로 동작할 수 있도록 개선/재구성한 회로를 반환하세요.
+- 사용자의 어설픈(미완성) 회로도를 보고, 실제로 동작할 수 있도록 개선/재구성한 회로를 반환하세요.
 - 노드 position의 x, y 좌표는 200px 간격으로 설정하세요 (예: x: 100, 300, 500 / y: 100, 300, 500).
 - type은 반드시 다음 중 하나여야 합니다: battery, resistor, led, capacitor, switch, and_gate, or_gate, not_gate, ground, power
 - improvements 배열에는 원본 회로에서 무엇을 개선했는지 구체적으로 나열하세요.

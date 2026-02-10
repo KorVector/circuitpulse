@@ -31,7 +31,7 @@ import PowerNode from "./nodes/PowerNode";
 
 import type { EditorNodeData, PaletteComponent } from "@/types/circuit";
 import type { CircuitAnalysis } from "@/types/circuit";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, CheckCircle } from "lucide-react";
 
 const nodeTypes: NodeTypes = {
   battery: BatteryNode,
@@ -62,6 +62,8 @@ function CircuitEditorContent() {
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<CircuitAnalysis | null>(null);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -74,10 +76,10 @@ function CircuitEditorContent() {
         setEdges(reconstructedEdges);
         localStorage.removeItem("circuitpulse-reconstructed");
         
-        // Show success notification (simple alert for now)
-        setTimeout(() => {
-          alert("AI 재구성 회로를 불러왔습니다");
-        }, 500);
+        // Show success notification
+        setNotificationMessage("AI 재구성 회로를 불러왔습니다");
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 3000);
         return;
       } catch (e) {
         console.error("Failed to load reconstructed circuit:", e);
@@ -506,6 +508,18 @@ function CircuitEditorContent() {
                   )}
                 </div>
               ) : null}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Notification Toast */}
+      {showNotification && (
+        <div className="fixed bottom-4 right-4 z-50 animate-slide-up">
+          <div className="rounded-lg border border-green-500/50 bg-green-500/10 px-6 py-3 shadow-lg backdrop-blur-sm">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-400" />
+              <p className="text-sm font-medium text-green-300">{notificationMessage}</p>
             </div>
           </div>
         </div>

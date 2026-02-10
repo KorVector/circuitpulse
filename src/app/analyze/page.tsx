@@ -7,6 +7,8 @@ import type { CircuitAnalysis } from "@/types/circuit";
 import { useRouter } from "next/navigation";
 import ReconstructedCircuitViewer from "@/components/analyze/ReconstructedCircuitViewer";
 
+const RESULTS_MAX_HEIGHT = 600;
+
 export default function AnalyzePage() {
   const router = useRouter();
   const [image, setImage] = useState<string | null>(null);
@@ -252,7 +254,7 @@ export default function AnalyzePage() {
                 </div>
 
                 {/* Tab Content */}
-                <div className="scrollbar-thin max-h-[600px] overflow-y-auto">
+                <div className="scrollbar-thin overflow-y-auto" style={{ maxHeight: `${RESULTS_MAX_HEIGHT}px` }}>
                   {activeTab === "analysis" && (
                     <div className="space-y-4">
                       {/* Open in Editor Button */}
@@ -407,7 +409,7 @@ export default function AnalyzePage() {
 
                   {/* Reconstructed Circuit Tab */}
                   {activeTab === "reconstructed" && analysis.reconstructedCircuit && (
-                    <div className="h-[600px]">
+                    <div style={{ height: `${RESULTS_MAX_HEIGHT}px` }}>
                       <ReconstructedCircuitViewer circuit={analysis.reconstructedCircuit} />
                     </div>
                   )}

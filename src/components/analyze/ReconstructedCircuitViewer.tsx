@@ -114,6 +114,9 @@ function ReconstructedCircuitViewerContent({ circuit }: ReconstructedCircuitView
       ground: "⏚",
       power: "⚡",
     };
+    if (!iconMap[type]) {
+      console.warn(`Unknown component type: ${type}, defaulting to resistor`);
+    }
     return iconMap[type] || "⚡";
   };
 
