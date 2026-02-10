@@ -70,6 +70,19 @@ function CircuitEditorContent() {
     if (analysisData) {
       try {
         const analysis = JSON.parse(analysisData);
+        
+        // Icon mapping helper
+        const getIconForType = (type: string): string => {
+          const iconMap: { [key: string]: string } = {
+            battery: "🔋",
+            resistor: "⚡",
+            led: "💡",
+            capacitor: "🔌",
+            switch: "🔛",
+          };
+          return iconMap[type] || "⚡";
+        };
+        
         // Convert analysis components to nodes
         const analysisNodes: Node<EditorNodeData>[] = analysis.components.map((comp: any, idx: number) => {
           const typeMap: { [key: string]: string } = {
@@ -96,7 +109,7 @@ function CircuitEditorContent() {
               type: nodeType as any,
               value: comp.value || "",
               unit: "",
-              icon: nodeType === "battery" ? "🔋" : nodeType === "resistor" ? "⚡" : nodeType === "led" ? "💡" : nodeType === "capacitor" ? "🔌" : "🔛",
+              icon: getIconForType(nodeType),
             },
           };
         });

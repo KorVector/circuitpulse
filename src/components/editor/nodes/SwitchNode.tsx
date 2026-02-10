@@ -1,10 +1,10 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo } from "react";
 import { Handle, Position, NodeProps } from "reactflow";
 import type { EditorNodeData } from "@/types/circuit";
 
-function SwitchNode({ data, selected, id }: NodeProps<EditorNodeData>) {
+function SwitchNode({ data, selected }: NodeProps<EditorNodeData>) {
   const isOn = data.isOn ?? false;
 
   return (
