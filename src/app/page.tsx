@@ -10,6 +10,7 @@ import {
   Package,
   Zap,
   ArrowRight,
+  Pencil,
 } from "lucide-react";
 
 export default function Home() {
@@ -18,6 +19,11 @@ export default function Home() {
       icon: Upload,
       title: "회로도 업로드 & 손그림 인식",
       description: "손으로 그린 회로도나 스캔한 이미지를 업로드하면 AI가 자동으로 인식합니다.",
+    },
+    {
+      icon: Pencil,
+      title: "CAD 스타일 회로 에디터",
+      description: "마우스로 직접 회로를 그리고 편집할 수 있는 직관적인 CAD 에디터를 제공합니다.",
     },
     {
       icon: Brain,
@@ -38,11 +44,6 @@ export default function Home() {
       icon: Package,
       title: "현실 부품 수급 & 대체 제안",
       description: "보유 부품으로 회로를 구성하거나 대체 가능한 부품을 추천받으세요.",
-    },
-    {
-      icon: Zap,
-      title: "실시간 시뮬레이션",
-      description: "가상 환경에서 회로를 구성하고 실시간으로 전류, 전압, 전력을 확인하세요.",
     },
   ];
 
@@ -101,6 +102,13 @@ export default function Home() {
               className="group flex w-full items-center justify-center gap-2 rounded-lg bg-blue-500 px-6 py-3 font-semibold text-white transition-all hover:bg-blue-600 sm:w-auto"
             >
               회로 분석 시작하기
+              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link
+              href="/editor"
+              className="group flex w-full items-center justify-center gap-2 rounded-lg border border-blue-500 bg-blue-500/10 px-6 py-3 font-semibold text-blue-400 transition-all hover:bg-blue-500/20 sm:w-auto"
+            >
+              회로 에디터
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>
             <Link
@@ -171,7 +179,7 @@ export default function Home() {
             지금 바로 시작하세요
           </h2>
           <p className="mb-8 text-lg text-gray-400">
-            회로도를 업로드하거나 직접 회로를 구성하여 CircuitPulse를 경험해보세요
+            회로도를 업로드하거나 직접 에디터로 회로를 그려서 CircuitPulse를 경험해보세요
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
@@ -179,6 +187,13 @@ export default function Home() {
               className="group flex w-full items-center justify-center gap-2 rounded-lg bg-blue-500 px-8 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-600 sm:w-auto"
             >
               회로 분석하기
+              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link
+              href="/editor"
+              className="group flex w-full items-center justify-center gap-2 rounded-lg border border-blue-500 bg-blue-500/10 px-8 py-4 text-lg font-semibold text-blue-400 transition-all hover:bg-blue-500/20 sm:w-auto"
+            >
+              회로 에디터
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>

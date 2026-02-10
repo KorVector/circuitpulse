@@ -1,0 +1,24 @@
+"use client";
+
+import { memo } from "react";
+import { Handle, Position, NodeProps } from "reactflow";
+import type { EditorNodeData } from "@/types/circuit";
+
+function GroundNode({ data, selected }: NodeProps<EditorNodeData>) {
+  return (
+    <div
+      className={`rounded-lg border-2 bg-gray-800 p-3 shadow-lg transition-all ${
+        selected ? "border-blue-500 shadow-blue-500/50" : "border-gray-600"
+      }`}
+    >
+      <Handle type="target" position={Position.Top} className="!bg-blue-400" />
+      
+      <div className="flex flex-col items-center gap-1">
+        <div className="text-2xl">⏚</div>
+        <div className="text-xs font-semibold text-gray-200">{data.label}</div>
+      </div>
+    </div>
+  );
+}
+
+export default memo(GroundNode);
