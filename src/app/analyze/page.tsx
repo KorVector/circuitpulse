@@ -593,7 +593,7 @@ export default function AnalyzePage() {
                   {analysis.userAnswer && (
                     <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-5">
                       <h3 className="mb-3 flex items-center gap-2 text-base font-bold text-blue-400">
-                        <span className="text-lg">❓</span> AI 답변 (궁금한 점)
+                        <span className="text-lg">💬</span> 궁금한 점에 대한 답변
                       </h3>
                       <p className="text-sm leading-relaxed text-gray-300">{analysis.userAnswer}</p>
                     </div>
