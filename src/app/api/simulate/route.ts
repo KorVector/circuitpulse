@@ -9,21 +9,37 @@ interface SimulationResult {
   warnings: string[];
 }
 
-// Parse value with units (k, M, G, m, μ, n, p)
+// Parse value with units (k=kilo, M=mega, G=giga, m=milli, μ/u=micro, n=nano, p=pico)
 function parseValue(valueStr: string): number {
-  const match = valueStr.match(/^([0-9.]+)\s*([kMGmμnpKΩVAFH]+)?$/);
+  // Match number followed by optional unit and multiplier
+  const match = valueStr.match(/^([0-9.]+)\s*([kKMGmμunp])?([ΩVAFHWΩω]*)$/);
   if (!match) return 0;
 
   let value = parseFloat(match[1]);
-  const unit = match[2]?.toLowerCase() || "";
+  const multiplier = match[2]?.toLowerCase() || "";
 
-  // Handle multipliers
-  if (unit.includes("k")) value *= 1000;
-  else if (unit.includes("m") && !unit.includes("μ")) value *= 0.001;
-  else if (unit.includes("μ") || unit.includes("u")) value *= 0.000001;
-  else if (unit.includes("n")) value *= 0.000000001;
-  else if (unit.includes("p")) value *= 0.000000000001;
-  else if (unit.includes("g")) value *= 1000000000;
+  // Apply multipliers (case-insensitive)
+  switch (multiplier) {
+    case "k":
+      value *= 1000; // kilo
+      break;
+    case "m":
+      value *= 0.001; // milli
+      break;
+    case "μ":
+    case "u":
+      value *= 0.000001; // micro
+      break;
+    case "n":
+      value *= 0.000000001; // nano
+      break;
+    case "p":
+      value *= 0.000000000001; // pico
+      break;
+    case "g":
+      value *= 1000000000; // giga (rare in electronics)
+      break;
+  }
 
   return value;
 }
