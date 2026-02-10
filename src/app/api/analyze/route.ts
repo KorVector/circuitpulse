@@ -174,7 +174,9 @@ ${userQuestion ? `사용자가 궁금한 점: ${userQuestion}\n` : ""}
     if (typeof parsedContent === 'string' && parsedContent.startsWith('"') && parsedContent.endsWith('"')) {
       try {
         parsedContent = JSON.parse(parsedContent);
-      } catch {}
+      } catch {
+        // 이중 파싱 실패는 무시하고 원본 content를 사용
+      }
     }
     
     // 2. 마크다운 코드 블록으로 감싸진 경우
@@ -216,7 +218,11 @@ ${userQuestion ? `사용자가 궁금한 점: ${userQuestion}\n` : ""}
           // 이스케이프된 문자 처리를 위해 개선된 regex 사용
           const summaryMatch = parsedContent.match(/"summary"\s*:\s*"((?:[^"\\]|\\.)*)"/);
           if (summaryMatch) {
-            extractedSummary = summaryMatch[1];
+            // 이스케이프 시퀀스 복원 (\n, \", \\ 등)
+            extractedSummary = summaryMatch[1]
+              .replace(/\\n/g, '\n')
+              .replace(/\\"/g, '"')
+              .replace(/\\\\/g, '\\');
           }
           
           // components 배열 추출 시도
@@ -224,7 +230,9 @@ ${userQuestion ? `사용자가 궁금한 점: ${userQuestion}\n` : ""}
           if (componentsMatch) {
             try {
               extractedComponents = JSON.parse(componentsMatch[1]);
-            } catch {}
+            } catch {
+              // components 배열 파싱 실패는 무시하고 빈 배열 사용
+            }
           }
           
           // errors 배열 추출 시도
@@ -232,9 +240,13 @@ ${userQuestion ? `사용자가 궁금한 점: ${userQuestion}\n` : ""}
           if (errorsMatch) {
             try {
               extractedErrors = JSON.parse(errorsMatch[1]);
-            } catch {}
+            } catch {
+              // errors 배열 파싱 실패는 무시하고 빈 배열 사용
+            }
           }
-        } catch {}
+        } catch {
+          // regex 추출 실패는 무시하고 기본값 사용
+        }
         
         analysisResult = {
           summary: extractedSummary,

@@ -245,13 +245,16 @@ export default function AnalyzePage() {
     const MAX_DEPTH = 3;
     
     // data.summary가 JSON 텍스트로 보이면 파싱 시도
+    // (API가 JSON을 문자열로 감싸서 반환하는 경우 처리)
     if (depth < MAX_DEPTH && typeof data.summary === 'string' && data.summary.trim().startsWith('{')) {
       try {
         const parsed = JSON.parse(data.summary);
         if (parsed.summary) {
           return validateAnalysis(parsed, depth + 1);
         }
-      } catch {}
+      } catch {
+        // JSON 파싱 실패는 무시하고 원본 데이터를 사용
+      }
     }
     
     return {
