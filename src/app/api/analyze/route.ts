@@ -90,8 +90,37 @@ ${availableParts ? `사용자가 보유한 부품: ${availableParts}\n` : ""}
       "suggestion": "제안사항",
       "benefit": "기대효과"
     }
-  ]
+  ],
+  "reconstructedCircuit": {
+    "description": "재구성된 회로에 대한 설명",
+    "nodes": [
+      {
+        "id": "node-1",
+        "type": "battery | resistor | led | capacitor | switch | and_gate | or_gate | not_gate | ground | power",
+        "label": "부품 라벨 (예: 전지 9V)",
+        "value": "부품 값 (예: 9V, 220Ω)",
+        "position": { "x": 100, "y": 200 }
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge-1",
+        "source": "node-1",
+        "target": "node-2",
+        "label": ""
+      }
+    ],
+    "improvements": [
+      "회로 개선사항 설명 (예: 저항이 없어 LED가 과전류로 손상될 수 있으므로 220Ω 저항을 추가했습니다)"
+    ]
+  }
 }
+
+**중요**: 
+- 사용자의 어거지(미완성) 회로도를 보고, 실제로 동작할 수 있도록 개선/재구성한 회로를 반환하세요.
+- 노드 position의 x, y 좌표는 200px 간격으로 설정하세요 (예: x: 100, 300, 500 / y: 100, 300, 500).
+- type은 반드시 다음 중 하나여야 합니다: battery, resistor, led, capacitor, switch, and_gate, or_gate, not_gate, ground, power
+- improvements 배열에는 원본 회로에서 무엇을 개선했는지 구체적으로 나열하세요.
 
 한국어로 응답하세요. 회로의 안전성, 효율성, 실용성을 중점적으로 분석하세요.`;
 

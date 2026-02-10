@@ -65,7 +65,26 @@ function CircuitEditorContent() {
 
   // Load from localStorage on mount
   useEffect(() => {
-    // First check if there's analysis data from the analyze page
+    // First check if there's reconstructed circuit data from the analyze page
+    const reconstructedData = localStorage.getItem("circuitpulse-reconstructed");
+    if (reconstructedData) {
+      try {
+        const { nodes: reconstructedNodes, edges: reconstructedEdges } = JSON.parse(reconstructedData);
+        setNodes(reconstructedNodes);
+        setEdges(reconstructedEdges);
+        localStorage.removeItem("circuitpulse-reconstructed");
+        
+        // Show success notification (simple alert for now)
+        setTimeout(() => {
+          alert("AI 재구성 회로를 불러왔습니다");
+        }, 500);
+        return;
+      } catch (e) {
+        console.error("Failed to load reconstructed circuit:", e);
+      }
+    }
+    
+    // Otherwise check if there's analysis data from the analyze page
     const analysisData = localStorage.getItem("editorAnalysisData");
     if (analysisData) {
       try {

@@ -2,9 +2,10 @@
 
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Upload, Loader2, AlertTriangle, CheckCircle, XCircle, Info, Edit3 } from "lucide-react";
+import { Upload, Loader2, AlertTriangle, CheckCircle, XCircle, Info, Edit3, Wrench } from "lucide-react";
 import type { CircuitAnalysis } from "@/types/circuit";
 import { useRouter } from "next/navigation";
+import ReconstructedCircuitViewer from "@/components/analyze/ReconstructedCircuitViewer";
 
 export default function AnalyzePage() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function AnalyzePage() {
   const [analysis, setAnalysis] = useState<CircuitAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"analysis" | "reconstructed">("analysis");
 
   const handleImageUpload = useCallback((file: File) => {
     const reader = new FileReader();
@@ -186,7 +188,7 @@ export default function AnalyzePage() {
             </div>
           </motion.div>
 
-          {/* Results Section */}
+          {/* Results Section with Tabs */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -220,15 +222,47 @@ export default function AnalyzePage() {
             )}
 
             {analysis && (
-              <div className="scrollbar-thin max-h-[600px] space-y-4 overflow-y-auto">
-                {/* Open in Editor Button */}
-                <button
-                  onClick={openInEditor}
-                  className="w-full flex items-center justify-center gap-2 rounded-lg border border-blue-500 bg-blue-500/10 px-4 py-3 text-sm font-semibold text-blue-400 transition-colors hover:bg-blue-500/20"
-                >
-                  <Edit3 className="h-4 w-4" />
-                  에디터에서 열기
-                </button>
+              <div className="space-y-4">
+                {/* Tabs */}
+                <div className="flex gap-2 border-b border-gray-800">
+                  <button
+                    onClick={() => setActiveTab("analysis")}
+                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
+                      activeTab === "analysis"
+                        ? "border-b-2 border-blue-500 text-blue-400"
+                        : "text-gray-400 hover:text-gray-300"
+                    }`}
+                  >
+                    <Info className="h-4 w-4" />
+                    📋 분석 결과
+                  </button>
+                  {analysis.reconstructedCircuit && (
+                    <button
+                      onClick={() => setActiveTab("reconstructed")}
+                      className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
+                        activeTab === "reconstructed"
+                          ? "border-b-2 border-blue-500 text-blue-400"
+                          : "text-gray-400 hover:text-gray-300"
+                      }`}
+                    >
+                      <Wrench className="h-4 w-4" />
+                      🔧 AI 재구성 회로도
+                    </button>
+                  )}
+                </div>
+
+                {/* Tab Content */}
+                <div className="scrollbar-thin max-h-[600px] overflow-y-auto">
+                  {activeTab === "analysis" && (
+                    <div className="space-y-4">
+                      {/* Open in Editor Button */}
+                      <button
+                        onClick={openInEditor}
+                        className="w-full flex items-center justify-center gap-2 rounded-lg border border-blue-500 bg-blue-500/10 px-4 py-3 text-sm font-semibold text-blue-400 transition-colors hover:bg-blue-500/20"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                        에디터에서 열기
+                      </button>
 
                 {/* Summary */}
                 <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
@@ -368,6 +402,16 @@ export default function AnalyzePage() {
                     </div>
                   </div>
                 )}
+                    </div>
+                  )}
+
+                  {/* Reconstructed Circuit Tab */}
+                  {activeTab === "reconstructed" && analysis.reconstructedCircuit && (
+                    <div className="h-[600px]">
+                      <ReconstructedCircuitViewer circuit={analysis.reconstructedCircuit} />
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </motion.div>
