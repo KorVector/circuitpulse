@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { image, availableParts } = await request.json();
+    const { image, availableParts, userQuestion } = await request.json();
 
     if (!image) {
       return NextResponse.json(
@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
     const prompt = `당신은 전기회로 전문가입니다. 제공된 회로도 이미지를 분석하고 다음 정보를 JSON 형식으로 제공하세요:
 
 ${availableParts ? `사용자가 보유한 부품: ${availableParts}\n` : ""}
+${userQuestion ? `사용자가 궁금한 점: ${userQuestion}\n` : ""}
 
 다음 JSON 형식으로 응답하세요:
 {
@@ -113,14 +114,16 @@ ${availableParts ? `사용자가 보유한 부품: ${availableParts}\n` : ""}
     "improvements": [
       "회로 개선사항 설명 (예: 저항이 없어 LED가 과전류로 손상될 수 있으므로 220Ω 저항을 추가했습니다)"
     ]
-  }
+  }${userQuestion ? `,
+  "userAnswer": "사용자 질문에 대한 상세 답변"` : ""}
 }
 
 **중요**: 
 - 사용자의 어설픈(미완성) 회로도를 보고, 실제로 동작할 수 있도록 개선/재구성한 회로를 반환하세요.
 - 노드 position의 x, y 좌표는 200px 간격으로 설정하세요 (예: x: 100, 300, 500 / y: 100, 300, 500).
 - type은 반드시 다음 중 하나여야 합니다: battery, resistor, led, capacitor, switch, and_gate, or_gate, not_gate, ground, power
-- improvements 배열에는 원본 회로에서 무엇을 개선했는지 구체적으로 나열하세요.
+- improvements 배열에는 원본 회로에서 무엇을 개선했는지 구체적으로 나열하세요.${userQuestion ? `
+- userQuestion에 대해 "userAnswer" 필드에 상세하고 친절하게 답변해주세요.` : ""}
 
 한국어로 응답하세요. 회로의 안전성, 효율성, 실용성을 중점적으로 분석하세요.`;
 
@@ -145,7 +148,7 @@ ${availableParts ? `사용자가 보유한 부품: ${availableParts}\n` : ""}
           ],
           generationConfig: {
             responseMimeType: "application/json",
-            maxOutputTokens: 8192,
+            maxOutputTokens: 16384,
           },
         }),
       }
