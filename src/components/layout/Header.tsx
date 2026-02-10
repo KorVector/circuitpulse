@@ -21,7 +21,7 @@ export default function Header() {
         <Link href="/" className="flex items-center gap-2">
           <Zap className="h-6 w-6 text-blue-400" />
           <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-xl font-bold text-transparent">
-            CircuitPulse
+            CircuitGuide
           </span>
         </Link>
         

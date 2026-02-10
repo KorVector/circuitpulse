@@ -1,8 +1,8 @@
-# CircuitPulse
+# CircuitGuide
 
 > AI 기반 전기회로 분석 시뮬레이터
 
-CircuitPulse는 인공지능을 활용하여 전기회로를 분석하고 시뮬레이션할 수 있는 웹 애플리케이션입니다. 회로도 이미지를 업로드하면 GPT-4o Vision API가 자동으로 회로를 인식하고 분석하여, 오류 진단, 부품 최적화, 위험 경고 등을 제공합니다.
+CircuitGuide는 인공지능을 활용하여 전기회로를 분석하고 시뮬레이션할 수 있는 웹 애플리케이션입니다. 회로도 이미지를 업로드하면 GPT-4o Vision API가 자동으로 회로를 인식하고 분석하여, 오류 진단, 부품 최적화, 위험 경고 등을 제공합니다.
 
 ## 주요 기능
 
@@ -74,7 +74,7 @@ cp .env.example .env.local
 `.env.local` 파일을 열고 OpenAI API 키를 입력하세요:
 ```env
 OPENAI_API_KEY=your_openai_api_key_here
-NEXT_PUBLIC_APP_NAME=CircuitPulse
+NEXT_PUBLIC_APP_NAME=CircuitGuide
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
