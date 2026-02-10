@@ -118,6 +118,7 @@ export interface CircuitAnalysis {
   dangerWarnings: DangerWarning[];
   optimizations: Optimization[];
   reconstructedCircuit?: ReconstructedCircuit;
+  userAnswer?: string; // 사용자 궁금한 점에 대한 AI 답변
 }
 
 // Editor-specific types
