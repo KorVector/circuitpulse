@@ -33,7 +33,7 @@ ${userQuestion ? `사용자가 궁금한 점: ${userQuestion}\n` : ""}
   "components": [
     {
       "name": "부품명",
-      "type": "부품 유형 (저항, LED, 전지 등)",
+      "type": "부품 유형 (어떤 부품이든 정확히 적으세요. 예: 저항, LED, 전지, 변압기, 다이오드 등)",
       "value": "부품 값 (예: 220Ω, 9V)",
       "quantity": 1
     }
@@ -148,7 +148,7 @@ ${userQuestion ? `사용자가 궁금한 점: ${userQuestion}\n` : ""}
           ],
           generationConfig: {
             responseMimeType: "application/json",
-            maxOutputTokens: 16384,
+            maxOutputTokens: 24576,
           },
         }),
       }
@@ -168,11 +168,30 @@ ${userQuestion ? `사용자가 궁금한 점: ${userQuestion}\n` : ""}
 
     // JSON이 잘릴 수 있으므로 안전하게 파싱
     let analysisResult;
+    let parsedContent = content;
+    
+    // 1. 이중 문자열 감싸기 처리 (JSON이 문자열로 감싸진 경우)
+    if (typeof parsedContent === 'string' && parsedContent.startsWith('"') && parsedContent.endsWith('"')) {
+      try {
+        parsedContent = JSON.parse(parsedContent);
+      } catch {
+        // 이중 파싱 실패는 무시하고 원본 content를 사용
+      }
+    }
+    
+    // 2. 마크다운 코드 블록으로 감싸진 경우
+    if (typeof parsedContent === 'string') {
+      const jsonMatch = parsedContent.match(/```json?\s*([\s\S]*?)```/);
+      if (jsonMatch) {
+        parsedContent = jsonMatch[1].trim();
+      }
+    }
+    
     try {
-      analysisResult = JSON.parse(content);
+      analysisResult = JSON.parse(parsedContent);
     } catch {
       // JSON이 잘린 경우 - 닫는 괄호를 추가하여 복구 시도
-      let fixed = content.trim();
+      let fixed = parsedContent.trim();
       // 열린 배열/객체 수 계산 후 닫기
       const openBraces = (fixed.match(/{/g) || []).length;
       const closeBraces = (fixed.match(/}/g) || []).length;
@@ -189,11 +208,50 @@ ${userQuestion ? `사용자가 궁금한 점: ${userQuestion}\n` : ""}
       try {
         analysisResult = JSON.parse(fixed);
       } catch {
-        // 복구 실패 시 기본 응답
+        // 복구 실패 시 - content에서 summary 필드 추출 시도
+        let extractedSummary = "회로 분석 결과를 구조화하지 못했습니다. 다시 시도해주세요.";
+        let extractedComponents: any[] = [];
+        let extractedErrors: any[] = [];
+        
+        try {
+          // content가 JSON 문자열처럼 보이면 summary 필드 추출 시도
+          // 이스케이프된 문자 처리를 위해 개선된 regex 사용
+          const summaryMatch = parsedContent.match(/"summary"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+          if (summaryMatch) {
+            // 이스케이프 시퀀스 복원 (\n, \", \\ 등)
+            extractedSummary = summaryMatch[1]
+              .replace(/\\n/g, '\n')
+              .replace(/\\"/g, '"')
+              .replace(/\\\\/g, '\\');
+          }
+          
+          // components 배열 추출 시도
+          const componentsMatch = parsedContent.match(/"components"\s*:\s*(\[[\s\S]*?\])\s*[,}]/);
+          if (componentsMatch) {
+            try {
+              extractedComponents = JSON.parse(componentsMatch[1]);
+            } catch {
+              // components 배열 파싱 실패는 무시하고 빈 배열 사용
+            }
+          }
+          
+          // errors 배열 추출 시도
+          const errorsMatch = parsedContent.match(/"errors"\s*:\s*(\[[\s\S]*?\])\s*[,}]/);
+          if (errorsMatch) {
+            try {
+              extractedErrors = JSON.parse(errorsMatch[1]);
+            } catch {
+              // errors 배열 파싱 실패는 무시하고 빈 배열 사용
+            }
+          }
+        } catch {
+          // regex 추출 실패는 무시하고 기본값 사용
+        }
+        
         analysisResult = {
-          summary: content.substring(0, 500),
-          components: [],
-          errors: [],
+          summary: extractedSummary,
+          components: extractedComponents,
+          errors: extractedErrors,
           calculations: [],
           alternatives: [],
           causalExplanations: [],
